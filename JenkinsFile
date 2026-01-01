@@ -18,8 +18,8 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 sh '''
-                    terraform apply -auto-approve \
-                      -var="key_name=key"
+terraform apply -auto-approve \
+  -var="key_name=key"
                 '''
             }
         }
@@ -45,15 +45,15 @@ pipeline {
         stage('Install Docker on EC2') {
             steps {
                 sshagent(['ec2-key']) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no ubuntu@${EC2_IP} << 'EOF'
-                        sudo apt update -y
-                        sudo apt install -y docker.io
-                        sudo systemctl start docker
-                        sudo systemctl enable docker
-                        sudo usermod -aG docker ubuntu
-                        EOF
-                    '''
+                    sh """
+ssh -o StrictHostKeyChecking=no ubuntu@${EC2_IP} '
+sudo apt update -y
+sudo apt install -y docker.io
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker ubuntu
+'
+                    """
                 }
             }
         }
@@ -61,14 +61,14 @@ pipeline {
         stage('Deploy Application') {
             steps {
                 sshagent(['ec2-key']) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no ubuntu@${EC2_IP} << 'EOF'
-                        docker pull bansil374/pyapp
-                        docker stop pythoncontainer || true
-                        docker rm pythoncontainer || true
-                        docker run -d -p 8082:8081 --name pythoncontainer bansil374/pyapp
-                        EOF
-                    '''
+                    sh """
+ssh -o StrictHostKeyChecking=no ubuntu@${EC2_IP} '
+docker pull bansil374/pyapp
+docker stop pythoncontainer || true
+docker rm pythoncontainer || true
+docker run -d -p 8082:8081 --name pythoncontainer bansil374/pyapp
+'
+                    """
                 }
             }
         }
