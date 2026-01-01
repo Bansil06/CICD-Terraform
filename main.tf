@@ -10,6 +10,6 @@ resource "aws_instance" "web" {
   vpc_security_group_ids = [data.aws_security_group.existing_sg.id]
 
   tags = {
-    Name = "Jenkins-Terraform"
+    Name = "Jenkins-Terraform-${count.index}"
   }
 }
