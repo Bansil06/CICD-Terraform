@@ -1,5 +1,8 @@
 resource "aws_security_group" "web_sg" {
   name = "web-sg"
+  tags = {
+    Name = "jenkins-terraform-ec2"
+  }
 
   ingress {
     from_port   = 22
