@@ -1,7 +1,7 @@
 resource "aws_security_group" "web_sg" {
   name = "web-sg"
   tags = {
-    Name = "jenkins-terraform-ec2"
+    Name = "Jenkins-Terraform"
   }
 
   ingress {
