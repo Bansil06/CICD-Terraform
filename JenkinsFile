@@ -46,7 +46,7 @@ terraform apply -auto-approve \
             steps {
                 sshagent(['ec2-key']) {
                     sh '''
-ssh -o StrictHostKeyChecking=no ubuntu@'"${EC2_IP}"' << EOF
+ssh -o StrictHostKeyChecking=no ubuntu@${EC2_IP} << EOF
 sudo apt update -y
 sudo apt install -y docker.io
 sudo systemctl start docker
@@ -62,7 +62,7 @@ EOF
             steps {
                 sshagent(['ec2-key']) {
                     sh '''
-ssh -o StrictHostKeyChecking=no ubuntu@'"${EC2_IP}"' << EOF
+ssh -o StrictHostKeyChecking=no ubuntu@${EC2_IP} << EOF
 docker pull bansil374/pyapp
 docker stop pythoncontainer || true
 docker rm pythoncontainer || true
