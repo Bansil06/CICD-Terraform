@@ -47,19 +47,24 @@ stage('Debug EC2 IP') {
 
 stage('Install Docker on EC2') {
   steps {
-    sshagent(['ec2-ssh-key']) {
-      sh """
-        ssh -tt -o StrictHostKeyChecking=no ubuntu@${EC2_IP} << 'EOF'
-          sudo apt update -y
-          sudo apt install -y docker.io -y
+sshagent(['ubuntu']) {
+    sh """
+      ssh -o StrictHostKeyChecking=no ubuntu@${EC2_IP} << 'EOF'
+        sudo apt update
+        sudo apt install -y docker.io
+        sudo systemctl start docker
+        sudo systemctl enable docker
+        sudo usermod -aG docker ubuntu
+      EOF
+    """
+}
+  }
+}
+
           sudo systemctl start docker
           sudo systemctl enable docker
           sudo usermod -aG docker ubuntu
-        EOF
-      """
-    }
-  }
-}
+
 
 stage('Deploy Application') {
   steps {
