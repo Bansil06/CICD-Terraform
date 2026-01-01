@@ -39,11 +39,11 @@ pipeline {
 
 stage('Install Docker on EC2') {
   steps {
-    sshagent(['ubuntu']) {
+    sshagent(['ec2-ssh-key']) {
       sh """
         ssh -o StrictHostKeyChecking=no ubuntu@${env.EC2_IP} << 'EOF'
           sudo apt update -y
-          sudo apt install -y docker.io
+          sudo apt install -y docker.io -y
           sudo systemctl start docker
           sudo systemctl enable docker
           sudo usermod -aG docker ubuntu
