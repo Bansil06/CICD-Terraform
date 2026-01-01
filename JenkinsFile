@@ -49,7 +49,7 @@ stage('Install Docker on EC2') {
   steps {
     sshagent(['ec2-ssh-key']) {
       sh """
-        ssh -o StrictHostKeyChecking=no ubuntu@${env.EC2_IP} << 'EOF'
+        ssh -tt -o StrictHostKeyChecking=no ubuntu@${EC2_IP} << 'EOF'
           sudo apt update -y
           sudo apt install -y docker.io -y
           sudo systemctl start docker
@@ -65,7 +65,7 @@ stage('Deploy Application') {
   steps {
     sshagent(['ubuntu']) {
       sh """
-        ssh -o StrictHostKeyChecking=no ubuntu@${env.EC2_IP} << 'EOF'
+        ssh -tt -o StrictHostKeyChecking=no ubuntu@${EC2_IP} << 'EOF'
           docker pull bansil374/pyapp
           docker stop pythoncontainer || true
           docker rm pythoncontainer || true
