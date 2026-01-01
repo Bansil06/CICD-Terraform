@@ -15,14 +15,14 @@ pipeline {
             }
         }
 
-stage('Terraform Apply') {
-    steps {
-        sh '''
-          terraform apply -auto-approve \
-            -var="key_name=key"
-        '''
-    }
-}
+    stage('Terraform Apply') {
+        steps {
+            sh '''
+              terraform apply -auto-approve \
+                -var="key_name=key"
+            '''
+            }
+        }
 
         stage('Get EC2 IP from Terraform') {
             steps {
