@@ -3,6 +3,7 @@ data "aws_security_group" "existing_sg" {
 }
 
 resource "aws_instance" "web" {
+  count                  = 2
   ami                    = var.ami_id
   instance_type          = var.instance_type
   key_name               = var.key_name
