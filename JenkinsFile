@@ -7,13 +7,6 @@ pipeline {
 
   stages {
 
-    stage('Checkout') {
-      steps {
-        git branch: 'main',
-            url: 'https://github.com/YOUR_USERNAME/terraform-aws-infra.git'
-      }
-    }
-
     stage('Terraform Init') {
       steps {
         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
@@ -27,7 +20,7 @@ pipeline {
       steps {
         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
                           credentialsId: 'aws-creds']]) {
-          sh 'terraform plan -var="key_name=your-keypair"'
+          sh 'terraform plan -var="key_name=your-keypair-name"'
         }
       }
     }
@@ -36,7 +29,7 @@ pipeline {
       steps {
         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
                           credentialsId: 'aws-creds']]) {
-          sh 'terraform apply -auto-approve -var="key_name=your-keypair"'
+          sh 'terraform apply -auto-approve -var="key_name=key"'
         }
       }
     }
