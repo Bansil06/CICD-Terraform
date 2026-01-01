@@ -33,7 +33,7 @@ resource "aws_security_group" "web_sg" {
     protocol    = "tcp"
     cidr_blocks = ["140.82.112.0/20"]
   }
-  }
+  
   ingress {
     from_port   = 8080
     to_port     = 8080
