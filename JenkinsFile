@@ -37,33 +37,35 @@ pipeline {
             }
         }
 
-        stage('Install Docker on EC2') {
-            steps {
-                sshagent(credentials: ['ec2-ssh-key']) {
-                    sh """
-                      ssh -o StrictHostKeyChecking=no ubuntu@${env.EC2_IP} << EOF
-                        sudo apt update -y
-                        sudo apt install -y docker.io
-                        sudo systemctl start docker
-                        sudo systemctl enable docker
-                        sudo usermod -aG docker ubuntu
-                  EOF
-                """
-                }
-            }
-        }
+stage('Install Docker on EC2') {
+  steps {
+    sshagent(['ubuntu']) {
+      sh """
+        ssh -o StrictHostKeyChecking=no ubuntu@${env.EC2_IP} << 'EOF'
+          sudo apt update -y
+          sudo apt install -y docker.io
+          sudo systemctl start docker
+          sudo systemctl enable docker
+          sudo usermod -aG docker ubuntu
+        EOF
+      """
+    }
+  }
+}
 
-        stage('Deploy Application') {
-            steps {
-                sh """
-                ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/key.pem ubuntu@${EC2_IP} << EOF
-                  docker pull bansil374/pyapp
-                  docker stop app || true
-                  docker rm app || true
-                  docker run -d -p 8080:8080 --name app bansil374/pyapp
-                EOF
-                """
-            }
-        }
+stage('Deploy Application') {
+  steps {
+    sshagent(['ubuntu']) {
+      sh """
+        ssh -o StrictHostKeyChecking=no ubuntu@${env.EC2_IP} << 'EOF'
+          docker pull bansil374/pyapp
+          docker stop pythoncontainer || true
+          docker rm pythoncontainer || true
+          docker run -d -p 80:5000 --name pythoncontainer bansil374/pyapp
+        EOF
+      """
+    }
+  }
+}
     }
 }
