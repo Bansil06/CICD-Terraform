@@ -37,19 +37,21 @@ pipeline {
             }
         }
 
-        stage('Install Docker on EC2') {
-            steps {
-                sh """
-                ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/key.pem ubuntu@${EC2_IP} << EOF
-                  sudo apt update -y
-                  sudo apt install -y docker.io
-                  sudo systemctl start docker
-                  sudo systemctl enable docker
-                  sudo usermod -aG docker ubuntu
-                EOF
-                """
-            }
+stage('Install Docker on EC2') {
+    steps {
+        sshagent(credentials: ['ec2-ssh-key']) {
+            sh """
+              ssh -o StrictHostKeyChecking=no ubuntu@${env.EC2_IP} << EOF
+                sudo apt update -y
+                sudo apt install -y docker.io
+                sudo systemctl start docker
+                sudo systemctl enable docker
+                sudo usermod -aG docker ubuntu
+              EOF
+            """
         }
+    }
+}
 
         stage('Deploy Application') {
             steps {
