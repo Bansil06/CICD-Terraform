@@ -9,6 +9,12 @@ pipeline {
 
     stages {
 
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Terraform Init') {
             steps {
                 sh 'terraform init'
@@ -18,64 +24,77 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 sh '''
-terraform apply -auto-approve \
-  -var="key_name=key"
+                  terraform apply -auto-approve \
+                    -var="key_name=key"
                 '''
             }
         }
 
-/*
-        stage('Get EC2 IP from Terraform') {
+        stage('Get EC2 Public IPs') {
             steps {
                 script {
-                    env.EC2_IP = sh(
-                        script: "terraform output -json ec2_public_ips | jq -r '.[0]'",
+                    def ips = sh(
+                        script: "terraform output -json ec2_public_ips | jq -r '.[]'",
                         returnStdout: true
-                    ).trim()
+                    ).trim().split('\n')
+
+                    env.EC2_IPS = ips.join(',')
+                    echo "EC2 Public IPs: ${env.EC2_IPS}"
                 }
-                echo "EC2 Public IP: ${env.EC2_IP}"
             }
         }
 
-        stage('Debug EC2 IP') {
+        stage('Install Docker on EC2s') {
             steps {
-                echo "DEBUG: EC2_IP = ${env.EC2_IP}"
-            }
-        }
-*/
-
-        stage('Install Docker on EC2') {
-            steps {
-                sshagent(['ec2-key']) {
-            sh '''
-for ip in $(terraform output -json ec2_public_ips | jq -r '.[]'); do
-  echo "Installing Docker on $ip"
-  ssh -o StrictHostKeyChecking=no ubuntu@$ip '
-    sudo apt update -y
-    sudo apt install -y docker.io
-    sudo systemctl start docker
-    sudo systemctl enable docker
-  '
-done
-'''
+                sshagent(['ubuntu']) {
+                    script {
+                        env.EC2_IPS.split(',').each { ip ->
+                            sh """
+                            echo "Installing Docker on ${ip}"
+                            ssh -o StrictHostKeyChecking=no ubuntu@${ip} '
+                                sudo apt update -y
+                                sudo apt install -y docker.io
+                                sudo systemctl start docker
+                                sudo systemctl enable docker
+                                sudo usermod -aG docker ubuntu
+                            '
+                            """
+                        }
+                    }
                 }
             }
         }
 
         stage('Deploy Application') {
             steps {
-                sshagent(['ec2-key']) {
-                    sh """
-echo "Installing Docker on $ip"
-ssh -o StrictHostKeyChecking=no ubuntu@$ip '
-docker pull bansil374/pyapp
-docker stop pythoncontainer || true
-docker rm pythoncontainer || true
-docker run -d -p 8082:8081 --name pythoncontainer bansil374/pyapp
-'
-                    """
+                sshagent(['ubuntu']) {
+                    script {
+                        env.EC2_IPS.split(',').each { ip ->
+                            sh """
+                            echo "Deploying application on ${ip}"
+                            ssh -o StrictHostKeyChecking=no ubuntu@${ip} '
+                                docker pull bansil374/pyapp
+                                docker stop pythoncontainer || true
+                                docker rm pythoncontainer || true
+                                docker run -d \
+                                  -p 8082:8081 \
+                                  --name pythoncontainer \
+                                  bansil374/pyapp
+                            '
+                            """
+                        }
+                    }
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo " Deployment completed successfully on all EC2 instances"
+        }
+        failure {
+            echo " Deployment failed. Check logs above."
         }
     }
 }
