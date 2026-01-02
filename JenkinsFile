@@ -24,6 +24,7 @@ terraform apply -auto-approve \
             }
         }
 
+/*
         stage('Get EC2 IP from Terraform') {
             steps {
                 script {
@@ -41,19 +42,22 @@ terraform apply -auto-approve \
                 echo "DEBUG: EC2_IP = ${env.EC2_IP}"
             }
         }
+*/
 
         stage('Install Docker on EC2') {
             steps {
                 sshagent(['ec2-key']) {
-                    sh """
-ssh -o StrictHostKeyChecking=no ubuntu@${EC2_IP} '
-sudo apt update -y
-sudo apt install -y docker.io
-sudo systemctl start docker
-sudo systemctl enable docker
-sudo usermod -aG docker ubuntu
-'
-                    """
+            sh '''
+for ip in $(terraform output -json ec2_public_ips | jq -r '.[]'); do
+  echo "Installing Docker on $ip"
+  ssh -o StrictHostKeyChecking=no ubuntu@$ip '
+    sudo apt update -y
+    sudo apt install -y docker.io
+    sudo systemctl start docker
+    sudo systemctl enable docker
+  '
+done
+'''
                 }
             }
         }
@@ -62,7 +66,8 @@ sudo usermod -aG docker ubuntu
             steps {
                 sshagent(['ec2-key']) {
                     sh """
-ssh -o StrictHostKeyChecking=no ubuntu@${EC2_IP} '
+echo "Installing Docker on $ip"
+ssh -o StrictHostKeyChecking=no ubuntu@$ip '
 docker pull bansil374/pyapp
 docker stop pythoncontainer || true
 docker rm pythoncontainer || true
