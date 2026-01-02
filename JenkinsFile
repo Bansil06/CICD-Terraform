@@ -46,7 +46,7 @@ pipeline {
 
         stage('Install Docker on EC2s') {
             steps {
-                sshagent(['ubuntu']) {
+                sshagent(['ec2-key']) {
                     script {
                         env.EC2_IPS.split(',').each { ip ->
                             sh """
@@ -67,7 +67,7 @@ pipeline {
 
         stage('Deploy Application') {
             steps {
-                sshagent(['ubuntu']) {
+                sshagent(['ec2-key']) {
                     script {
                         env.EC2_IPS.split(',').each { ip ->
                             sh """
